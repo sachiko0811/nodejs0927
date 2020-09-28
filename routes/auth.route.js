@@ -13,12 +13,14 @@ router.get('/login', authController.getLogin);
 // @route   POST /login
 // @desc    Authenticate a user
 // @access  Public
-router.post('/login', 
-[
-    body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
-    body('password', 'Password has to be valid').isLength({min:5}).isAlphanumeric().trim()
-],
-    authController.postLogin);
+router.post(
+    '/login',
+    [
+        body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
+        body('password', 'Password has to be valid').isLength({min:5}).isAlphanumeric().trim()
+    ],
+    authController.postLogin
+);
 
 // @route   GET /signup
 // @desc    To see the User registration page
@@ -41,16 +43,20 @@ router.post(
                         return Promise.reject('Email already exists. Please use a different email.')
                     }
                 });
-            }),
+            })
+            .normalizeEmail(),
         body('password', 'Please enter a password with only numbers and text with at least 5 characters')
-            .isLength({ min: 5})
-            .isAlphanumeric(),
-        body('confirmPassword').custom((value, {req}) => {
-            if(value !== req.body.password){
-                throw new Error('Passwords have to match!');
-            }
-            return true;
-        })
+            .isLength({ min: 5 })
+            .isAlphanumeric()
+            .trim(),
+        body('confirmPassword')
+            .custom((value, { req }) => {
+                if (value !== req.body.password) {
+                    throw new Error('Passwords have to match!');
+                }
+                return true;
+            })
+            .trim()
     ],
     authController.postSignUp
 );

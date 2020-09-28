@@ -26,6 +26,7 @@ const authRoute = require('./routes/auth.route');
 const errorController = require('./controllers/error.controller');
 
 const User = require('./models/user.model');
+const { render } = require('ejs');
 
 //-------Middlewares
 
@@ -49,16 +50,19 @@ app.use(csrfProtection);
 app.use(flash());
 
 app.use((req, res, next) => {
+    // throw new Error('dummy error');
     if(!req.session.user){
         return next();
     }
     User
-        .findById(req.session.user._id)
-        .then(user => {
+    .findById(req.session.user._id)
+    .then(user => {
             req.user = user;
             next();
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            next(new Error(err));
+        })
 });
 
 app.use((req,res,next) => {
@@ -71,8 +75,19 @@ app.use('/admin', adminRoute); //set the routes for admin
 app.use(shopRoute); //set the routes for shop
 app.use(authRoute); //set the routes for auth
 
-//error 404 checking middleware
+//error checking middleware
 app.use(errorController.get404);
+app.get('/500', errorController.get500);
+
+//error handler middleware
+app.use((error, req, res, next) => {
+    // res.redirect('/500');
+    res.status(500).render('500', {
+        pageTitle: 'Error!',
+        path: '/500',
+        isAuth: req.session.isLoggedIn
+    })
+});
 
 //-------end of Middlewares
 
